@@ -126,6 +126,44 @@ class PowerNav extends Module
         );
     }
 
+    private function orderedPairs($str)
+    {
+        $m = array();
+        preg_match_all('/\p{L}|\d/u', mb_strtolower($str), $m);
+        $chars = $m[0];
+        $pairs = array();
+        for ($i = 0; $i < count($chars); ++$i)
+        {
+            for ($j = $i + 1; $j < count($chars); ++$j)
+            {
+                $pair = $chars[$i].$chars[$j];
+                $invdist = 1.0 / ($j - $i);
+
+                if (!array_key_exists($pair, $pairs) || $pairs[$pair] < $invdist)
+                {
+                    $pairs[$pair] = $invdist;
+                }
+            }
+        }
+
+        return $pairs;
+    }
+
+    private function getWords($str)
+    {
+        $m = array();
+        preg_match_all('/(\p{L}|\d)+/u', mb_strtolower($str), $m);
+        $words = array();
+
+        foreach ($m[0] as $wordStrings)
+        {
+            preg_match_all('(\p{L}|\d/u', $wordStrings, $m);
+            $words[] = $m[0];
+        }
+
+        return $words;
+    }
+
     public function score($candidate, $query)
     {
         $c = $this->charCount($candidate);
@@ -144,7 +182,40 @@ class PowerNav extends Module
             }
         }
 
-        return $common / min($c['count'], $q['count']);
+        $orderedPairs = $this->orderedPairs($candidate);
+
+        $m = array();
+        preg_match_all('/\p{L}|\d/u', mb_strtolower($query), $m);
+        $queryChars = $m[0];
+
+        $okPairs = 0;
+        $totalPairs = 0;
+        for ($i = 0; $i < count($queryChars) - 1; ++$i) {
+            $pair = $queryChars[$i] . $queryChars[$i+1];
+            ++$totalPairs;
+            if (array_key_exists($pair, $orderedPairs))
+            {
+                $okPairs += $orderedPairs[$pair];
+            }
+        }
+
+        $candidateWords = $this->getWords($candidate);
+        $queryWords = $this->getWords($query);
+
+        $okWords = 0;
+        $totalWords = count($queryWords);
+        foreach ($candidateWords as $cw)
+        {
+            foreach ($queryWords as $qw)
+            {
+                if ($qw[0] === $cw[0] && end($qw) === end($cw))
+                {
+                    ++$okWords;
+                }
+            }
+        }
+
+        return ($common / min($c['count'], $q['count']) + $okPairs / $totalPairs + $okWords / $totalWords) / 3;
     }
 
     public function lookupActions($query)
