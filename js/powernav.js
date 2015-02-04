@@ -1,6 +1,20 @@
 /* global $, powernav */
 $(function () {
 
+    function throttle (cb, fps) {
+        var dt = 1000 / fps, handle;
+        return function () {
+            var args = arguments;
+            function actualCall () {
+                cb.apply(undefined, args);
+            }
+            if (undefined !== handle) {
+                window.clearTimeout(handle);
+            }
+            handle = window.setTimeout(actualCall, dt);
+        };
+    }
+
     var powerNavShown = false;
 
     function showPowerNav () {
@@ -41,6 +55,8 @@ $(function () {
         });
     }
 
+    var throttledQuery = throttle(powerNavQuery, 30);
+
     function renderResult(row) {
         return [
             '<div class="result">',
@@ -77,6 +93,6 @@ $(function () {
 
     $('#powernav-input').on('keyup', function () {
         var query = $(this).val();
-        powerNavQuery(query);
+        throttledQuery(query);
     });
 });

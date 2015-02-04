@@ -28,9 +28,4 @@ abstract class PowerNavPlugin
     {
         return $this->module->l($str);
     }
-
-    public function score($candidate, $query)
-    {
-        return $this->module->score($candidate, $query);
-    }
 }
