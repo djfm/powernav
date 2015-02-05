@@ -17,7 +17,9 @@ class PowerNavGoToPlugin extends PowerNavPlugin
             $results[] = array(
                 'actionString' => sprintf($this->l('Open `%1$s` menu (`%2$s`)'), $tab['name'], $tab['class_name']),
                 'actionData' => array(
-                    'className' => $tab['class_name']
+                    'className' => $tab['class_name'],
+                    'url' => $this->context->link->getAdminLink($tab['class_name']),
+                    'onActivate' => 'updateLocation'
                 )
             );
         }
