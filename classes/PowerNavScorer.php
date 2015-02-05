@@ -2,9 +2,13 @@
 
 class PowerNavScorer
 {
+    private $query;
+    private $preparedQuery;
+
     public function __construct($query)
     {
-
+        $this->query = $query;
+        $this->preparedQuery = $this->prepare($query);
     }
 
     /**
@@ -37,7 +41,7 @@ class PowerNavScorer
                 $pair = $c.$chars[$j];
                 $dist = 1 / ($j - $i);
 
-                if (!array_key_exists($pair, $pairs) || $dist < $pairs[$pair])
+                if (!array_key_exists($pair, $pairs) || $dist > $pairs[$pair])
                 {
                     $pairs[$pair] = $dist;
                 }
@@ -61,6 +65,44 @@ class PowerNavScorer
 
     public function score($string)
     {
-        return 0;
+        $preparedString = $this->prepare($string);
+
+        $commonChars = 0;
+        $totalChars = count($this->preparedQuery['chars']);
+        foreach ($this->preparedQuery['distr'] as $char => $count)
+        {
+            if (isset($preparedString['distr'][$char]))
+            {
+                $commonChars += min($count, $preparedString['distr'][$char]);
+            }
+        }
+        $commonCharsScore = $commonChars / $totalChars;
+
+        $commonPairs = 0;
+        $totalPairs = count($this->preparedQuery['chars']) - 1;
+        for ($i = 0; $i < count($this->preparedQuery['chars']) - 1; ++$i)
+        {
+            $pair = $this->preparedQuery['chars'][$i] . $this->preparedQuery['chars'][$i+1];
+            if (isset($preparedString['pairs'][$pair]))
+            {
+                $commonPairs += $preparedString['pairs'][$pair];
+            }
+        }
+        $commonPairsScore = $commonPairs / $totalPairs;
+
+        $OKWords = 0;
+        foreach ($this->preparedQuery['words'] as $qw)
+        {
+            foreach ($preparedString['words'] as $sw)
+            {
+                if ($qw[0] === $sw[0] && end($qw) === end($sw))
+                {
+                    ++$OKWords;
+                }
+            }
+        }
+        $OKWordsScore = $OKWords / count($this->preparedQuery['words']);
+
+        return ($commonCharsScore + $commonPairsScore + $OKWordsScore) / 3;
     }
 }
