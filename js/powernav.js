@@ -42,6 +42,7 @@ $(function () {
     }
 
     function powerNavQuery (query) {
+
         query = query.trim();
         if (!query) {
             return;
@@ -70,7 +71,7 @@ $(function () {
         }
     });
 
-    var throttledQuery = throttle(powerNavQuery, 30);
+    var throttledQuery = throttle(powerNavQuery, 25);
 
     function renderResult (row, offset) {
         return [
