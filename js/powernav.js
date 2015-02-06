@@ -2,6 +2,7 @@
 $(function () {
 
     var powerNavShown = false;
+    var results = [];
     var resultCount = 0;
     var focusedResult = 0;
 
@@ -50,11 +51,12 @@ $(function () {
             query: query
         }).then(function (rows) {
             resultCount = rows.length;
-            var results = [];
+            results = rows;
+            var renderedResults = [];
             for (var i = 0, len = rows.length; i < len; ++i) {
-                results.push(renderResult(rows[i], i));
+                renderedResults.push(renderResult(rows[i], i));
             }
-            $('#powernav-results').html(results.join(''));
+            $('#powernav-results').html(renderedResults.join(''));
             focusResult(0);
         });
     }
@@ -98,7 +100,14 @@ $(function () {
         var $result = $('#powernav .result[data-offset="' + offset + '"]');
 
         $result.addClass('focused');
+    }
 
+    function activateFocusedResult () {
+        var actionData = results[focusedResult].actionData;
+
+        if ('updateLocation' === actionData.onActivate) {
+            window.location = actionData.url;
+        }
     }
 
     $(document).bind("keydown", function(e){
@@ -110,6 +119,9 @@ $(function () {
             return false;
         } else if (e.keyCode === 40 /* down arrow */) {
             focusResult(focusedResult + 1);
+            return false;
+        } else if (e.keyCode === 13 /* return key */) {
+            activateFocusedResult();
             return false;
         }
     });
