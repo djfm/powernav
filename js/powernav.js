@@ -49,7 +49,7 @@ $(function () {
         }).then(function (rows) {
             var results = [];
             for (var i = 0, len = rows.length; i < len; ++i) {
-                results.push(renderResult(rows[i]));
+                results.push(renderResult(rows[i]), i);
             }
             $('#powernav-results').html(results.join(''));
         });
@@ -57,22 +57,28 @@ $(function () {
 
     var throttledQuery = throttle(powerNavQuery, 30);
 
-    function renderResult(row) {
+    function renderResult (row, offset) {
         return [
             '<div class="result">',
-                '<span class="score">', Math.round(100*row.score), '</span>',
+                '<span class="score" data-offset="' + offset + '">', Math.round(100*row.score), '</span>',
                 row.actionString,
             '</div>'
         ].join('');
     }
 
+    function focusResult (offset) {
+
+    }
+
     $(document).bind("keyup keydown", function(e){
         if (e.ctrlKey && e.keyCode === 80 /* p key */){
-
             showPowerNav();
-
-            e.preventDefault();
-            e.stopPropagation();
+            return false;
+        } else if (e.keyCode === 38 /* up arrow */) {
+            focusResult(-1);
+            return false;
+        } else if (e.keyCode === 40 /* down arrow */) {
+            focusResult(+1);
             return false;
         }
     });
