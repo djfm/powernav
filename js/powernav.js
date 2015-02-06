@@ -82,6 +82,7 @@ $(function () {
     function focusResult (offset) {
 
         if (offset < 0) {
+            $('#powernav-input').focus();
             offset = 0;
         } else if (offset >= resultCount) {
             offset = resultCount - 1;
