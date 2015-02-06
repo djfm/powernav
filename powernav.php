@@ -153,6 +153,6 @@ class PowerNav extends Module
 
         usort($actions, create_function('$a, $b', 'return $b["score"] < $a["score"] ? -1 : 1;'));
 
-        return array_slice($actions, 0, 20);
+        return array_slice($actions, 0, 12);
     }
 }

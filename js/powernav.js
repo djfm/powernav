@@ -1,6 +1,10 @@
 /* global $, powernav */
 $(function () {
 
+    var powerNavShown = false;
+    var resultCount = 0;
+    var focusedResult = 0;
+
     function throttle (cb, fps) {
         var dt = 1000 / fps, handle;
         return function () {
@@ -14,8 +18,6 @@ $(function () {
             handle = window.setTimeout(actualCall, dt);
         };
     }
-
-    var powerNavShown = false;
 
     function showPowerNav () {
         $('#powernav').show();
@@ -47,20 +49,31 @@ $(function () {
         request('powerNavQuery', {
             query: query
         }).then(function (rows) {
+            resultCount = rows.length;
             var results = [];
             for (var i = 0, len = rows.length; i < len; ++i) {
-                results.push(renderResult(rows[i]), i);
+                results.push(renderResult(rows[i], i));
             }
             $('#powernav-results').html(results.join(''));
+            focusResult(0);
         });
     }
+
+    $('#powernav-results').on('click', '.result', function () {
+        var $this = $(this);
+        if ($this.hasClass('focused')) {
+
+        } else {
+            focusResult(+$this.attr('data-offset'));
+        }
+    });
 
     var throttledQuery = throttle(powerNavQuery, 30);
 
     function renderResult (row, offset) {
         return [
-            '<div class="result">',
-                '<span class="score" data-offset="' + offset + '">', Math.round(100*row.score), '</span>',
+            '<div class="result" data-offset="' + offset + '">',
+                '<span class="score">', Math.round(100*row.score), '</span>',
                 row.actionString,
             '</div>'
         ].join('');
@@ -68,22 +81,39 @@ $(function () {
 
     function focusResult (offset) {
 
+        if (offset < 0) {
+            offset = 0;
+        } else if (offset >= resultCount) {
+            offset = resultCount - 1;
+        }
+
+        focusedResult = offset;
+
+        var $previouslyFocused = $('#powernav .result.focused');
+        if ($previouslyFocused.length > 0) {
+            $previouslyFocused.removeClass('focused');
+        }
+
+        var $result = $('#powernav .result[data-offset="' + offset + '"]');
+
+        $result.addClass('focused');
+
     }
 
-    $(document).bind("keyup keydown", function(e){
+    $(document).bind("keydown", function(e){
         if (e.ctrlKey && e.keyCode === 80 /* p key */){
             showPowerNav();
             return false;
         } else if (e.keyCode === 38 /* up arrow */) {
-            focusResult(-1);
+            focusResult(focusedResult - 1);
             return false;
         } else if (e.keyCode === 40 /* down arrow */) {
-            focusResult(+1);
+            focusResult(focusedResult + 1);
             return false;
         }
     });
 
-    $(document).bind("keyup keydown", function(e){
+    $(document).bind("keydown", function(e){
         if (e.keyCode === 27) {
 
             if (powerNavShown) {
@@ -97,8 +127,12 @@ $(function () {
         }
     });
 
+    var oldQuery = null;
     $('#powernav-input').on('keyup', function () {
         var query = $(this).val();
-        throttledQuery(query);
+        if (query !== oldQuery) {
+            oldQuery = query;
+            throttledQuery(query);
+        }
     });
 });
