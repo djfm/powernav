@@ -32,18 +32,18 @@ class PowerNavScorer
             $chars = array_merge($chars, $bits);
         }
 
+
         for ($i = 0; $i < count($chars); ++$i)
         {
             $c = $chars[$i];
 
-            for ($j = $i+1; $j < count($chars) - 1; ++$j)
+            if ($i < count($chars) - 1)
             {
-                $pair = $c.$chars[$j];
-                $dist = 1 / ($j - $i);
+                $pair = $c . $chars[$i + 1];
 
-                if (!array_key_exists($pair, $pairs) || $dist > $pairs[$pair])
+                if (!array_key_exists($pair, $pairs))
                 {
-                    $pairs[$pair] = $dist;
+                    $pairs[$pair] = 1;
                 }
             }
 
@@ -79,13 +79,12 @@ class PowerNavScorer
         $commonCharsScore = $commonChars / $totalChars;
 
         $commonPairs = 0;
-        $totalPairs = count($this->preparedQuery['chars']) - 1;
-        for ($i = 0; $i < count($this->preparedQuery['chars']) - 1; ++$i)
+        $totalPairs = count($this->preparedQuery['pairs']);
+        foreach ($this->preparedQuery['pairs'] as $pair)
         {
-            $pair = $this->preparedQuery['chars'][$i] . $this->preparedQuery['chars'][$i+1];
             if (isset($preparedString['pairs'][$pair]))
             {
-                $commonPairs += $preparedString['pairs'][$pair];
+                $commonPairs += 1;
             }
         }
         $commonPairsScore = $commonPairs / $totalPairs;
